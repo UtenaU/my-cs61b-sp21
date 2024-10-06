@@ -51,7 +51,7 @@ public class Tile {
     /** Return the result of merging OTHERTILE with me after moving to
      *  (COL, ROW). */
     public Tile merge(int col, int row, Tile otherTile) {
-        assert value == otherTile.value();
+        assert value == otherTile.value(); // 断言检查
         next = otherTile.next = new Tile(2 * value, col, row);
         return next;
     }

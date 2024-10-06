@@ -34,7 +34,7 @@ public class Board implements Iterable<Tile> {
         viewPerspective = Side.NORTH;
         for (int col = 0; col < size; col += 1) {
             for (int row = 0; row < size; row += 1) {
-                int value = rawValues[size - 1 - row][col];
+                int value = rawValues[size - 1 - row][col]; // why size -1 - row
                 Tile tile;
                 if (value == 0) {
                     tile = null;
@@ -58,6 +58,7 @@ public class Board implements Iterable<Tile> {
 
     /** Return the current Tile at (COL, ROW), when sitting with the board
      *  oriented so that SIDE is at the top (farthest) from you. */
+    /** 返回当前位于 (COL, ROW) 位置的棋子，当棋盘以当前方向放置时 */
     private Tile vtile(int col, int row, Side side) {
         return values[side.col(col, row, size())][side.row(col, row, size())];
     }
@@ -84,6 +85,10 @@ public class Board implements Iterable<Tile> {
      * treated as coordinates with respect to the current viewPerspective.
      *
      * Returns whether or not this move is a merge.
+     * */
+    /** 将棋子 TILE 放置在列 COL、行 ROW 处，其中 COL 和 ROW 是基于当前视角 viewPerspective 的坐标。
+     *
+     * 返回此操作是否为合并操作。
      * */
     public boolean move(int col, int row, Tile tile) {
         int pcol = viewPerspective.col(col, row, size()),

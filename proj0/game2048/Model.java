@@ -1,7 +1,6 @@
 package game2048;
 
-import java.util.Formatter;
-import java.util.Observable;
+import java.util.*;
 
 
 /** The state of a game of 2048.
@@ -58,7 +57,7 @@ public class Model extends Observable {
         return board.size();
     }
 
-    /** Return true iff the game is over (there are no moves, or
+    /** Return true iff（if and only if)™ the game is over (there are no moves, or
      *  there is a tile with value 2048 on the board). */
     public boolean gameOver() {
         checkGameOver();
@@ -114,6 +113,59 @@ public class Model extends Observable {
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
 
+        //should consider the side to transfer the cordination
+        board.setViewingPerspective(side);
+
+        for (int c = 0; c < board.size(); c++) {
+            //on every rows iteration , take a map to record fixed col's row tile had been merged
+            Boolean[] mergedRowRecorder = new Boolean[board.size()];
+            Arrays.fill(mergedRowRecorder, false);
+            for (int r = board.size() -1 ; r >=0 ; r--) {
+                Tile t = board.tile(c,r);
+                if (t != null){
+//                    we can use move function's return boolean to judge whether the move to null or merged
+                    // so most impotant this is to get what is the true input of move function
+                    // because we only think in the NORTH's side ,so on the every move ,
+                    // the tile's next only to the upper rows or static
+                    // because the iteration from one col to every row form bottom to top
+                    //e.g.  now c = 0 ,and we will iterate 0,0 0,1 0,2 0,3
+                    // is iterating from bottom to top  a good thing for tricky merge or triple merge
+                    // anyway we should let change happen first
+                    // think from noMerge and BasicMerge
+                    // let's watch for col side : 0 0 2 0
+                    // when we go to the '2', we will watch the upper,if it's null ,goto it,and clean the board value of the prev
+
+                    //record the final null, or find the merging object
+                    int destinationOnRow = r;
+                    for (int nextRow = r + 1; nextRow < board.size(); nextRow++) {
+                        if (board.tile(c,nextRow) != null || nextRow == board.size() - 1){
+                            destinationOnRow = nextRow;
+                            break;
+                        }
+                    }
+                    if (destinationOnRow != r){
+                        if(board.tile(c,destinationOnRow) == null){
+                            board.move(c, destinationOnRow, t);
+                        } else if (board.tile(c,destinationOnRow).value() == t.value() && ! mergedRowRecorder[destinationOnRow]){
+
+                            //merge part : we should think about whether [board.tile(c,destinationOnRow)] merged
+                            //can we use a Map to record the recordings
+                            board.move(c, destinationOnRow, t);
+                            score += t.value() * 2;
+                            mergedRowRecorder[destinationOnRow] = true;
+                        }else{
+                            //cannot merge
+                            board.move(c, destinationOnRow - 1, t);
+                        }
+                        changed = true;
+
+                    }
+
+                }
+            }
+        }
+
+        board.setViewingPerspective(Side.NORTH);
         checkGameOver();
         if (changed) {
             setChanged();
@@ -137,7 +189,13 @@ public class Model extends Observable {
      *  Empty spaces are stored as null.
      * */
     public static boolean emptySpaceExists(Board b) {
-        // TODO: Fill in this function.
+        for (int col = 0; col < b.size(); col++) {
+            for (int row = 0; row < b.size(); row++) {
+                if (b.tile(col,row) == null){
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -147,7 +205,13 @@ public class Model extends Observable {
      * given a Tile object t, we get its value with t.value().
      */
     public static boolean maxTileExists(Board b) {
-        // TODO: Fill in this function.
+        for (int col = 0; col < b.size(); col++) {
+            for (int row = 0; row < b.size(); row++) {
+                if (b.tile(col,row) != null && b.tile(col,row).value() == 2048 ){
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -158,7 +222,50 @@ public class Model extends Observable {
      * 2. There are two adjacent tiles with the same value.
      */
     public static boolean atLeastOneMoveExists(Board b) {
-        // TODO: Fill in this function.
+        if(Model.emptySpaceExists(b)){
+            return true;
+        }
+        if(Model.maxTileExists(b)){
+            return true;
+        }
+
+        // judge if there have two adjacent tiles with the same value.
+        // think about iterate 沿着每一行或者每一列做两两比较，如果存在两两相等就可以
+
+        for (int col = 0; col < b.size(); col++) {
+            for (int row = 0; row < b.size(); row++) {
+//                左右移动，比相邻列
+                int adcol = col + 1;
+                if(adcol < b.size() && adcol >= 0){
+                    if (b.tile(adcol,row).value() == b.tile(col,row).value()){
+                        return true;
+                    }
+                }
+                adcol = col - 1;
+                if(adcol < b.size() && adcol >= 0){
+                    if (b.tile(adcol,row).value() == b.tile(col,row).value()){
+                        return true;
+                    }
+                }
+
+//                上下移动，比相邻行
+                int adrow = row + 1;
+                if(adrow < b.size() && adrow >= 0){
+                    if (b.tile(col,adrow).value() == b.tile(col,row).value()){
+                        return true;
+                    }
+                }
+                adrow = row - 1;
+                if(adrow < b.size() && adrow >= 0){
+                    if (b.tile(col,adrow).value() == b.tile(col,row).value()){
+                        return true;
+                    }
+                }
+
+
+            }
+        }
+
         return false;
     }
 

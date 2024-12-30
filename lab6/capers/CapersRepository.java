@@ -1,6 +1,9 @@
 package capers;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
+
 import static capers.Utils.*;
 
 /** A repository for Capers 
@@ -18,8 +21,9 @@ public class CapersRepository {
     static final File CWD = new File(System.getProperty("user.dir"));
 
     /** Main metadata folder. */
-    static final File CAPERS_FOLDER = null; // TODO Hint: look at the `join`
-                                            //      function in Utils
+    static final File CAPERS_FOLDER = Utils.join(CWD, ".capers");
+    // TODO Hint: look at the `join`
+    //      function in Utils
 
     /**
      * Does required filesystem operations to allow for persistence.
@@ -31,7 +35,17 @@ public class CapersRepository {
      *    - story -- file containing the current story
      */
     public static void setupPersistence() {
-        // TODO
+        // TODO to prepare the persistence dir
+        File cappers = CapersRepository.CAPERS_FOLDER;
+        if(!cappers.exists()){
+            cappers.mkdir();
+        }
+        File dogs = Dog.DOG_FOLDER;
+        if(!dogs.exists()){
+            dogs.mkdir();
+        }
+
+
     }
 
     /**
@@ -39,8 +53,29 @@ public class CapersRepository {
      * to a file called `story` in the .capers directory.
      * @param text String of the text to be appended to the story
      */
-    public static void writeStory(String text) {
-        // TODO
+    public static void writeStory(String text) throws IOException {
+        // TODO 1 find the directory location
+        //we need the txt been restored on .capers/story
+        //story is a file store the story
+        File story = Utils.join(CAPERS_FOLDER,"story");
+        try{
+            if(!story.exists()){
+                if (!story.createNewFile()) {
+                    System.out.println("文件创建失败: " + story.getAbsolutePath());
+                }
+            }
+            String previousText = Utils.readContentsAsString(story);
+            if(!previousText.isBlank()){
+                text = previousText + '\n' + text;
+            }
+//            Utils.writeContents(story,previousText, text);
+//            text += System.lineSeparator();
+            Utils.writeContents(story,text);
+            System.out.println(Utils.readContentsAsString(story));
+        }catch (IOException e){
+            System.out.println("发生错误: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -50,6 +85,9 @@ public class CapersRepository {
      */
     public static void makeDog(String name, String breed, int age) {
         // TODO
+        Dog dog = new Dog(name, breed, age);
+        dog.saveDog();
+        System.out.println(dog);
     }
 
     /**
@@ -60,5 +98,10 @@ public class CapersRepository {
      */
     public static void celebrateBirthday(String name) {
         // TODO
+        //get the target object
+        Dog birthdayDog = Utils.readObject(Utils.join(Dog.DOG_FOLDER,name), Dog.class);
+        birthdayDog.haveBirthday();
+        //save the change object
+        birthdayDog.saveDog();
     }
 }
